@@ -18,10 +18,11 @@ public class GamePlay extends JPanel implements KeyListener, ActionListener {
     private int ballPosY = 350;
     private int ballXdir = -1;
     private int ballYdir = -2;
-//    private
+    private MapGenerator map;
 
     public GamePlay(){
-//
+
+        map = new MapGenerator(3,7);
         addKeyListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
@@ -34,7 +35,9 @@ public class GamePlay extends JPanel implements KeyListener, ActionListener {
         g.setColor(Color.black);
         g.fillRect(1,1,692,592);
 
-//
+        map.draw((Graphics2D) g);
+
+        //border set with yellow
         g.setColor(Color.YELLOW);
         g.fillRect(0,0,3,592);
         g.fillRect(0,0,692,3);
@@ -44,14 +47,15 @@ public class GamePlay extends JPanel implements KeyListener, ActionListener {
         g.setFont(new Font("serif", Font.BOLD,25));
         g.drawString(""+score,590,30);
 
-
+        //player rect
         g.setColor(Color.yellow);
         g.fillRect(playerX,550,100,8);
 
+        //ball
         g.setColor(Color.GREEN);
         g.fillOval(ballPosX,ballPosY,20,20);
 
-
+        //if ball drop down
         if(ballPosY > 570) {
             play = false;
             ballXdir = 0;
@@ -62,6 +66,7 @@ public class GamePlay extends JPanel implements KeyListener, ActionListener {
             g.drawString("Press Enter to continue game",190,300);
         }
 
+        //if it breaks all the bricks
         if(totalBrick == 0){
             play = false;
             ballXdir = -1;
@@ -83,9 +88,51 @@ public class GamePlay extends JPanel implements KeyListener, ActionListener {
             if(new Rectangle(ballPosX, ballPosY,20,20).intersects(new Rectangle(playerX,550,100,8))){
                 ballYdir = -ballYdir;
             }
+            A:
+            for (int i = 0; i < map.map.length ; i++) {
+                for (int j = 0; j < map.map[0].length; j++) {
 
-            for (int i = 0; i <1 ; i++) {
+                    if(map.map[i][j] > 0) {
+                        int brickX = j * map.bricksWidth + 80;
+                        int brickY = i * map.bricksHeight + 50;
+                        int brickWidth = map.bricksWidth;
+                        int brickHeight = map.bricksHeight;
 
+                        Rectangle rect = new Rectangle(brickX,brickY,brickWidth,brickHeight);
+                        Rectangle ballrect = new Rectangle(ballPosX,ballPosY,20,20);
+
+                        Rectangle brickrect = rect;
+
+                        if(ballrect.intersects(brickrect)){
+                            map.setBrickValue(0,i,j);
+                            totalBrick--;
+                            score += 5;
+
+                            if(ballPosX + 19 <= brickrect.x || ballPosX + 1 >= brickrect.x + brickWidth){
+                                ballXdir = -ballXdir;
+                            }
+                            else {
+                                ballYdir = -ballYdir;
+                            }
+                            break A;
+                        }
+                    }
+                }
+            }
+
+            ballPosX += ballXdir;
+            ballPosY += ballYdir;
+
+            if(ballPosX < 0) {
+                ballXdir = -ballXdir;
+            }
+
+            if(ballPosX > 670) {
+                ballXdir = -ballXdir;
+            }
+
+            if(ballPosY < 0) {
+                ballYdir = -ballYdir;
             }
         }
         repaint();
@@ -96,9 +143,50 @@ public class GamePlay extends JPanel implements KeyListener, ActionListener {
 
     }
 
+    public void moveRight() {
+        play = true;
+        playerX += 20;
+    }
+
+    public void moveLeft() {
+        play = true;
+        playerX -= 20;
+    }
     @Override
     public void keyPressed(KeyEvent e) {
 
+        if(e.getKeyCode() == KeyEvent.VK_RIGHT){
+            if(playerX >= 600) {
+                playerX = 600;
+            }
+            else{
+                moveRight();
+            }
+        }
+
+        if(e.getKeyCode() == KeyEvent.VK_LEFT){
+            if(playerX < 10){
+                playerX = 10;
+            }
+            else{
+                moveLeft();
+            }
+        }
+
+        if(e.getKeyCode() == KeyEvent.VK_ENTER){
+            if(!play){
+                ballPosX = 120;
+                ballPosY = 350;
+                ballXdir = -1;
+                ballYdir = -2;
+                score = 0;
+                playerX = 310;
+                totalBrick = 21;
+                map = new MapGenerator(3, 7);
+
+                repaint();
+            }
+        }
     }
 
     @Override
